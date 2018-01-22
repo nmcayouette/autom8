@@ -2,18 +2,49 @@ const gulp = require('gulp');
 const fs = require('fs');
 const argv = require('yargs').argv
 
+// const git = require('gulp-git');
+
 gulp.task('version', () => {
-  const newVersion = 'v1.1.0';
   const targetFilePath = './package.json';
 
   // Increment pckg.json
   const pkg = require(targetFilePath);
-  pkg.version = newVersion;
+  pkg.version = versionBump(pkg.version);
 
   fs.writeFile(targetFilePath, JSON.stringify(pkg), (err) => {
     if(err) throw err;
-    console.log(targetFilePath + ' has been updated to ' + newVersion);
+    console.log(targetFilePath + ' has been updated.');
   });
 
-  // Add tag to commit
+  // git.tag(pkg.version, 'Automated Bumping', (err) => {
+  //   if(err) throw err;
+  // });
 })
+
+const versionBump = (initialVersion, type) => {
+  const formattedVersion = initialVersion.substring(1, initialVersion.length);
+  const parsedVersion = formattedVersion.split('.');
+
+  for (position in parsedVersion) {
+    const versionNumber = parsedVersion[position];
+    parsedVersion[position] = parseInt(versionNumber);
+  }
+
+  if (argv.type === 'major') {
+    const parsedInt = parseInt(parsedVersion[0]);
+    parsedVersion[0] = parsedInt + 1;
+    // Reset minor and patch
+    parsedVersion[1] = 0;
+    parsedVersion[2] = 0;
+  } else if (argv.type === 'minor') {
+    const parsedInt = parseInt(parsedVersion[1]);
+    parsedVersion[1] = parsedInt + 1;
+    // Reset patch
+    parsedVersion[2] = 0;
+  } else if (argv.type === 'patch') {
+    const parsedInt = parseInt(parsedVersion[2]);
+    parsedVersion[2] = parsedInt + 1;
+  }
+
+  return 'v' + parsedVersion.join('.');
+}
